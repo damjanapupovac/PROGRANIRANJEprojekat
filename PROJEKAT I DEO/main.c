@@ -12,7 +12,7 @@ typedef struct nalog
     struct nalog* next;
 }nalog;
 
-nalog* create(char ime[], char prezime[], char email[], char username[], char password[] ,nalog* next) // 30, NULL
+nalog* create(char ime[], char prezime[], char email[], char username[], char password[] ,nalog* next)
 {
     nalog* novi_nalog = (nalog*)malloc(sizeof(nalog));
     strcpy(novi_nalog->ime, ime);
@@ -104,6 +104,34 @@ int EmailValidan(char* email)
     return 0;
 }
 
+void dodajufajl(char* ime, char* prezime, char* email, char* username, char* password)
+{
+    FILE* fajlsanalozima= fopen("nalozi.txt", "a+");
+    fprintf(fajlsanalozima, "%s %s %s %s %s\n", ime, prezime, email, username, password);
+    fclose(fajlsanalozima);
+}
+
+nalog* citanjeizfajla(nalog* nalozi)
+{
+    char ime[20]="";
+    char prezime[20]="";
+    char email[30]="";
+    char username[16]="";
+    char password[16]="";
+    FILE* fajlsanalozima= fopen("nalozi.txt", "r");
+    while(1==1)
+    {
+        int rezultatcitanja=fscanf(fajlsanalozima, "%s %s %s %s %s", ime, prezime, email, username, password);
+        if(rezultatcitanja==EOF)
+        {
+            break;
+        }
+        nalozi = append(nalozi, ime, prezime, email, username, password, NULL);
+    }
+    fclose(fajlsanalozima);
+    return nalozi;
+}
+
 nalog* DodavanjeNovogNaloga(nalog* nalozi)
 {
     char ime[20];
@@ -151,7 +179,8 @@ nalog* DodavanjeNovogNaloga(nalog* nalozi)
         printf("Passwordi se ne poklapaju. Pokusajte ponovo.");
         return nalozi;
     }
-    nalozi = append(nalozi, ime, prezime, email, username, password, NULL);
+        nalozi = append(nalozi, ime, prezime, email, username, password, NULL);
+        dodajufajl(ime, prezime, email, username, password);
     return nalozi;
 }
 
@@ -254,6 +283,7 @@ int main()
 {
     int naredba;
     nalog* nalozi=NULL;
+    nalozi=citanjeizfajla(nalozi);
     nalog* ulogovani=NULL;
     do
      {
