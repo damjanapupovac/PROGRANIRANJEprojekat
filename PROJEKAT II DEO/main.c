@@ -550,6 +550,29 @@ video* GledajVideo(video* headv, char* link)
     return headv;
 }
 
+video* like_dislike_comment (video* headv, int naredba)
+{
+    video* cursorv=headv;
+     switch(naredba)
+    {
+    case 1:
+        cursorv->brlajkova=cursorv->brlajkova+1;
+        break;
+    case 2:
+        cursorv->brdislajkova=cursorv->brdislajkova+1;
+        break;
+    case 3:
+        cursorv->brkomentara=cursorv->brkomentara+1;
+        break;
+    case 0:
+        break;
+    default:
+        printf("Pogrešna naredba. Pokušajte ponovo.\n");
+        break;
+    }
+    return headv;
+}
+
 void HomePage (video* videi)
 {
     video* nova_lista=NULL;
@@ -577,6 +600,7 @@ int main()
 
     char naziv_videa[100];
     char link[6];
+    int naredba1;
     do
      {
         printf("\nMeni\n");
@@ -630,6 +654,13 @@ int main()
                 break;
             case 9:
                 HomePage(videi);
+                printf("Unesite link videa koji hocete da gledate: ");
+                scanf("%s", link);
+                videi=GledajVideo(videi, link);
+                printf("Like(1)   Dislike(2)   Comment(3)   0\n");
+                scanf("%d", &naredba1);
+                videi=like_dislike_comment(videi, naredba1);
+                sacuvajvidee(videi);
                 break;
             case 10:
                 printf("Unesite ime videa: ");
@@ -638,6 +669,9 @@ int main()
                 printf("Unesite link videa koji hocete da gledate: ");
                 scanf("%s", link);
                 videi=GledajVideo(videi, link);
+                printf("Like(1)   Dislike(2)   Comment(3)   0\n");
+                scanf("%d", &naredba1);
+                videi=like_dislike_comment(videi, naredba1);
                 sacuvajvidee(videi);
                 break;
             case 0:
