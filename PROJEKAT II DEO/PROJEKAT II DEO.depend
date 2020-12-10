@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1606413793 source:c:\programiranje\projekat i deo\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
+1607629361 source:c:\programiranje\projekat ii deo\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
