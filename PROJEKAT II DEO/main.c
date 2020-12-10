@@ -552,23 +552,33 @@ video* GledajVideo(video* headv, char* link)
 
 video* like_dislike_comment (video* headv, int naredba)
 {
+    char komentar[100]="";
     video* cursorv=headv;
-     switch(naredba)
+    if(naredba==1)
     {
-    case 1:
         cursorv->brlajkova=cursorv->brlajkova+1;
-        break;
-    case 2:
+        return headv;
+    }
+    else if(naredba==2)
+    {
         cursorv->brdislajkova=cursorv->brdislajkova+1;
-        break;
-    case 3:
+        return headv;
+    }
+    else if(naredba==3)
+    {
+        printf(">>");
+        gets(komentar);
         cursorv->brkomentara=cursorv->brkomentara+1;
-        break;
-    case 0:
-        break;
-    default:
+        return headv;
+    }
+    else if(naredba==0)
+    {
+        return headv;
+    }
+    else
+    {
         printf("Pogrešna naredba. Pokušajte ponovo.\n");
-        break;
+        return headv;
     }
     return headv;
 }
@@ -657,6 +667,7 @@ int main()
                 printf("Unesite link videa koji hocete da gledate: ");
                 scanf("%s", link);
                 videi=GledajVideo(videi, link);
+                sacuvajvidee(videi);
                 printf("Like(1)   Dislike(2)   Comment(3)   0\n");
                 scanf("%d", &naredba1);
                 videi=like_dislike_comment(videi, naredba1);
@@ -669,6 +680,7 @@ int main()
                 printf("Unesite link videa koji hocete da gledate: ");
                 scanf("%s", link);
                 videi=GledajVideo(videi, link);
+                sacuvajvidee(videi);
                 printf("Like(1)   Dislike(2)   Comment(3)   0\n");
                 scanf("%d", &naredba1);
                 videi=like_dislike_comment(videi, naredba1);
