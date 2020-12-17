@@ -24,6 +24,14 @@ typedef struct video
     struct video* sledeci;
 }video;
 
+typedef struct komentari
+{
+    char naziv[100];
+    char komentar[100];
+    char username[16];
+    struct komentari* sledeci;
+}komentari;
+
 nalog* create(char ime[], char prezime[], char email[], char username[], char password[] ,nalog* next)
 {
     nalog* novi_nalog = (nalog*)malloc(sizeof(nalog));
@@ -229,7 +237,6 @@ nalog* Login(nalog* nalozi)
     scanf("%s", password);
     nalog* ulogovan=1;
     ulogovan=nadji_nalog(nalozi, UsernameIliEmail, password);
-    //printf("%s", ulogovan->username);
     return ulogovan;
 }
 
@@ -387,7 +394,7 @@ video* DodavanjeVidea(video* videi, char* username)
     char usernamev[16];
     strcpy(usernamev, username);
     printf("Unesite naziv videa:\n");
-    scanf("%s", naziv);
+    gets(naziv);
     const int duzina=5;
     char* link1=random_link(link, duzina);
     videi=appendv(videi, naziv, link1, brpregleda, brlajkova, brdislajkova, brkomentara, usernamev, NULL);
@@ -395,13 +402,120 @@ video* DodavanjeVidea(video* videi, char* username)
     return videi;
 }
 
-video* izmeni_video(video* headv, char* naziv)
+komentari* createk(char naziv[], char komentar[], char username[], komentari* sledeci)
 {
+    komentari* novi_komentar = (komentari*)malloc(sizeof(komentari));
+    strcpy(novi_komentar->naziv, naziv);
+    strcpy(novi_komentar->komentar, komentar);
+    strcpy(novi_komentar->username, username);
+    novi_komentar->sledeci = sledeci;
+    return novi_komentar;
+}
+
+komentari* appendk(komentari* head, char* naziv, char komentar[], char username[], komentari* sledeci)
+{
+    komentari* novi_komentar;
+    if(head == NULL)
+    {
+        novi_komentar = createk(naziv, komentar, username, head);
+        head = novi_komentar;
+        return head;
+    }
+    komentari* cursor = head;
+    while(cursor->sledeci != NULL)
+    {
+        cursor = cursor->sledeci;
+    }
+    novi_komentar = createk(naziv, komentar, username, NULL);
+    cursor->sledeci = novi_komentar;
+    return head;
+}
+
+void dodajufajlk(char* naziv, char* komentar, char*username)
+{
+    FILE* fajlsakomentarima= fopen("komentari.txt", "a+");
+    fprintf(fajlsakomentarima, "%s %s %s\n", naziv, komentar, username);
+    fclose(fajlsakomentarima);
+}
+
+komentari* citanjeizfajlak(komentari* lista_komentara)
+{
+    char naziv[100]="";
+    char komentar[100]="";
+    char username[16];
+    FILE* fajlsakomentarima= fopen("komentari.txt", "r");
+    while(1==1)
+    {
+        int rezultatcitanja=fscanf(fajlsakomentarima, "%s %s %s\n", naziv, komentar, username);
+        if(rezultatcitanja==EOF)
+        {
+            break;
+        }
+        lista_komentara = appendk(lista_komentara, naziv, komentar, username, NULL);
+    }
+    fclose(fajlsakomentarima);
+    return lista_komentara;
+}
+
+void sacuvajkomentare(komentari* lista_komentara)
+{
+    komentari* cursor=lista_komentara;
+    FILE* fajlsakomentarima=fopen("komentari.txt", "w");
+    while(cursor!=NULL)
+    {
+        fprintf(fajlsakomentarima, "%s %s %s\n", cursor->naziv, cursor->komentar, cursor->username);
+        cursor=cursor->sledeci;
+    }
+    fclose(fajlsakomentarima);
+}
+
+komentari* izmena_komentara (komentari* lista_komentara, char* naziv, char* novi_naziv)
+{
+    komentari* cursor;
+    cursor=lista_komentara;
+    while(cursor!=NULL)
+    {
+        if(strcmp(cursor->naziv, naziv)==0)
+        {
+        strcpy(cursor->naziv, novi_naziv);
+        }
+    cursor=cursor->sledeci;
+    }
+
+    return lista_komentara;
+}
+
+video* izmeni_video(video* headv, char* naziv, char* username)
+{
+    komentari* lista_komentara = NULL;
+    lista_komentara=citanjeizfajlak(lista_komentara);
     char novi_naziv[100];
     video* cursorv=headv;
-    printf("Unesite novi naziv: ");
-    scanf("%s", novi_naziv);
-    strcpy(cursorv->naziv, novi_naziv);
+    if((strcmp(headv->naziv, naziv)==0) && (strcmp(headv->usernamev, username)==0))
+    {
+        printf("Unesite novi naziv: ");
+		scanf("%s", novi_naziv);
+		strcpy(cursorv->naziv, novi_naziv);
+    }
+    else
+    {
+        cursorv=cursorv->sledeci;
+        while(cursorv!=NULL)
+        {
+            if((strcmp(cursorv->naziv, naziv)==0) && (strcmp(cursorv->usernamev, username)==0))
+            {
+                printf("Unesite novi naziv: ");
+				scanf("%s", novi_naziv);
+				strcpy(cursorv->naziv, novi_naziv);
+            }
+            else
+            {
+                cursorv=cursorv->sledeci;
+            }
+        }
+    }
+    lista_komentara=izmena_komentara(lista_komentara, naziv, novi_naziv);
+    sacuvajkomentare(lista_komentara);
     return headv;
 }
 
@@ -550,35 +664,56 @@ video* GledajVideo(video* headv, char* link)
     return headv;
 }
 
-video* like_dislike_comment (video* headv, int naredba)
+void ispis_komentara(komentari* head, char* naziv)
 {
+    komentari* cursor=head;
+    while(cursor!=NULL )
+    {
+        if(strcmp(cursor->naziv, naziv)==0)
+        {
+            printf("%s %s\n", cursor->komentar, cursor->username);
+        }
+        cursor=cursor->sledeci;
+    }
+}
+
+video* like_dislike_comment (video* headv, int naredba, char* link, char* username)
+{
+    komentari* lista_komentara=NULL;
+    lista_komentara=citanjeizfajlak(lista_komentara);
     char komentar[100]="";
+    char naziv[100];
     video* cursorv=headv;
-    if(naredba==1)
+    while(cursorv!=NULL)
     {
-        cursorv->brlajkova=cursorv->brlajkova+1;
-        return headv;
-    }
-    else if(naredba==2)
-    {
-        cursorv->brdislajkova=cursorv->brdislajkova+1;
-        return headv;
-    }
-    else if(naredba==3)
-    {
-        printf(">>");
-        gets(komentar);
-        cursorv->brkomentara=cursorv->brkomentara+1;
-        return headv;
-    }
-    else if(naredba==0)
-    {
-        return headv;
-    }
-    else
-    {
-        printf("Pogrešna naredba. Pokušajte ponovo.\n");
-        return headv;
+        if(strcmp(cursorv->link, link)==0)
+        {
+            switch(naredba)
+            {
+            case 1:
+                cursorv->brlajkova++;
+                return headv;
+                break;
+            case 2:
+                cursorv->brdislajkova++;
+                return headv;
+                break;
+            case 3:
+                strcpy(naziv, cursorv->naziv);
+                ispis_komentara(lista_komentara, naziv);
+                printf("Unesite komentar: ");
+                scanf("%s", komentar);
+                lista_komentara=appendk(lista_komentara, naziv, komentar, username, NULL);
+                dodajufajlk(naziv, komentar, username);
+                cursorv->brkomentara++;
+                return headv;
+                break;
+            case 0:
+                return headv;
+                break;
+            }
+        }
+    cursorv=cursorv->sledeci;
     }
     return headv;
 }
@@ -600,20 +735,23 @@ int main()
     int naredba;
     nalog* nalozi=NULL;
     video* videi=NULL;
+    //komentari* lista_komentara=NULL;
     nalog* ulogovani=NULL;
 
     videi=citanjeizfajlav(videi);
     nalozi=citanjeizfajla(nalozi);
+    //lista_komentara=citanjeizfajlak(lista_komentara);
 
     FILE* fajlsavideima;
     FILE* fajlsanalozima;
+    FILE* fajlsakomentarima;
 
     char naziv_videa[100];
     char link[6];
     int naredba1;
     do
      {
-        printf("\nMeni\n");
+1        printf("\nMeni\n");
         printf("1. Dodavanje novog naloga\n");
         printf("2. Log in\n");
         if(ulogovani!=NULL)
@@ -653,13 +791,15 @@ int main()
                 videi=DodavanjeVidea(videi, ulogovani->username);
                 break;
             case 7:
-                videi=izmeni_video(videi, videi->naziv);
+                printf("Unesite naziv videa koji zelite da izmenite:\n");
+                scanf("%s", naziv_videa);
+                videi=izmeni_video(videi, naziv_videa, ulogovani->username);
                 sacuvajvidee(videi);
                 break;
             case 8:
                 printf("Unesite naziv videa koji zelite da obrisete:");
                 scanf("%s", naziv_videa);
-                videi=disposev(videi, videi->usernamev, naziv_videa);
+                videi=disposev(videi, ulogovani->username, naziv_videa);
                 sacuvajvidee(videi);
                 break;
             case 9:
@@ -670,8 +810,9 @@ int main()
                 sacuvajvidee(videi);
                 printf("Like(1)   Dislike(2)   Comment(3)   0\n");
                 scanf("%d", &naredba1);
-                videi=like_dislike_comment(videi, naredba1);
+                videi=like_dislike_comment(videi, naredba1, link, ulogovani->username);
                 sacuvajvidee(videi);
+                //sacuvajkomentare(lista_komentara);
                 break;
             case 10:
                 printf("Unesite ime videa: ");
@@ -683,8 +824,9 @@ int main()
                 sacuvajvidee(videi);
                 printf("Like(1)   Dislike(2)   Comment(3)   0\n");
                 scanf("%d", &naredba1);
-                videi=like_dislike_comment(videi, naredba1);
+                videi=like_dislike_comment(videi, naredba1, link, ulogovani->username);
                 sacuvajvidee(videi);
+                //sacuvajkomentare(lista_komentara);
                 break;
             case 0:
                 break;
